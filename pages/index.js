@@ -5,24 +5,49 @@ import { useState } from 'react';
 import { BsSearch } from 'react-icons/bs';
 import Weather from '../components/Weather';
 import Spinner from '../components/Spinner';
+import Datepicker from 'react-tailwindcss-datepicker';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWeatherByCity } from '../state/weatherSlice';
 
 export default function Home() {
+  const loading = useSelector((state) => state.weather.loading);
+  const weather = useSelector((state) => state.weather.data);
+  const dispatch = useDispatch();
   const [city, setCity] = useState('');
-  const [weather, setWeather] = useState({});
-  const [loading, setLoading] = useState(false);
+  //const [geoCord, setGeoCord] = useState({});
+  //const [loading, setLoading] = useState(false);
+  const [value, onChange] = useState(new Date());
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.WEATHER_KEY}`;
+  // const dataUrl = `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${
+  //   geoCord.lat
+  // }&lon=${geoCord.lon}&dt=${Math.floor(value.getTime() / 1000)}&appid=${
+  //   process.env.WEATHER_KEY
+  // }}`;
 
-  const fetchWeather = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    axios.get(url).then((r) => {
-      setWeather(r.data);
-    });
-    setCity('');
-    setLoading(false);
-  };
+  // const fetchWeather = (e) => {
+  //   e.preventDefault();
 
-  if (loading) {
+  //   setLoading(true);
+  //   axios.get(url).then((r) => setWeather(r.data));
+  //   // axios.get(geoUrl).then((r) => {
+  //   //   setGeoCord({ lat: r.data[0].lat, lon: r.data[0].lon });
+  //   //   return axios
+  //   //     .get(
+  //   //       `https://api.openweathermap.org/data/3.0/onecall/timemachine?lat=${
+  //   //         r.data.lat
+  //   //       }&lon=${r.data[].lon}&dt=${Math.floor(value.getTime() / 1000)}&appid=${
+  //   //         process.env.WEATHER_KEY
+  //   //       }}`
+  //   //     )
+  //   //     .then((r) => {
+  //   //       console.log('data', r.data);
+  //   //     });
+  //   // });
+  //   setCity('');
+  //   setLoading(false);
+  // };
+
+  if (loading === 'pending') {
     return <Spinner />;
   } else {
     return (
@@ -41,28 +66,44 @@ export default function Home() {
           alt="Weather app background"
           className="object-cover"
         />
-        {/* Search */}
-        <div className="relative flex justify-between items-center max-w-[500px] w-full m-auto pt-4 text-white z-10">
-          <form
-            onSubmit={fetchWeather}
-            className="flex justify-between items-center w-full m-auto p-3 bg-transparent border border-gray-300 text-white rounded-2xl"
-          >
-            <div>
-              <input
-                onChange={(e) => setCity(e.target.value)}
-                className="bg-transparent border-none text-white focus:outline-none text-2xl"
-                type="text"
-                placeholder="Search city"
-              />
+        <div className="grid grid-cols-7 gap-4">
+          <div className="col-span-5">
+            {/* Search */}
+            <div className=" relative flex-row justify-between items-center max-w-[500px] w-full m-auto pt-4 text-white z-10">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  dispatch(fetchWeatherByCity(url));
+                }}
+                className="w-full md:w-4/5 flex  justify-between items-center m-auto p-3 bg-transparent border border-gray-300 text-white rounded-2xl"
+              >
+                <div>
+                  <input
+                    onChange={(e) => setCity(e.target.value)}
+                    className="bg-transparent border-none text-white focus:outline-none text-2xl"
+                    type="text"
+                    placeholder="Search city"
+                  />
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    dispatch(fetchWeatherByCity(url));
+                  }}
+                >
+                  <BsSearch size={30} />
+                </button>
+              </form>
             </div>
 
-            <button onClick={fetchWeather}>
-              <BsSearch size={30} />
-            </button>
-          </form>
+            {/* Weather */}
+            {weather.main && <Weather data={weather} />}
+          </div>
+          <div className="col-span-2 pt-4 z-10">
+            <Datepicker value={value} onChange={onChange} asSingle={true} />
+          </div>
         </div>
-        {/* Weather */}
-        {weather.main && <Weather data={weather} />}
       </div>
     );
   }
